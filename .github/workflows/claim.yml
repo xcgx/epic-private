@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: "Revadike/epicgames-freebies-claimer"
+          repository: "xcgx/epic-private"
           persist-credentials: false
       - name: Use Node.js 14.x 
         uses: actions/setup-node@v1 
