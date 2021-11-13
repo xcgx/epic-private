@@ -1,6 +1,6 @@
 {
     "name": "epicgames-freebies-claimer",
-    "version": "1.5.3",
+    "version": "1.5.6",
     "description": "Claim free game promotions from the Epic Game Store",
     "author": {
         "name": "Revadike",
@@ -9,11 +9,14 @@
     },
     "contributors": [
         "davispuh",
+        "drosoCode",
+        "ffuubarbuzz",
         "jackblk",
         "JourneyOver",
         "lingsamuel",
         "lupohan44",
         "MusTangLee",
+        "wzxjohn",
         "zaevi"
     ],
     "funding": [
@@ -56,6 +59,6 @@
         "check-update-github": "^0.0.4",
         "colors": "^1.4.0",
         "epicgames-client": "Revadike/node-epicgames-client#develop",
-        "tracer": "^1.1.5"
+        "tracer": "^1.0.3"
     }
 }
