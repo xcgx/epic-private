@@ -2,25 +2,13 @@
 
 const { "Launcher": EpicGames } = require("epicgames-client");
 const { freeGamesPromotions } = require("./src/gamePromotions");
-const Logger = require("tracer").console(`${__dirname}/logger.js`);
-const { writeFile, writeFileSync, existsSync, readFileSync } = require("fs");
+const { writeFile } = require("fs");
 
-const Auths = require(`${__dirname}/data/device_auths.json`);
+const Auths = require(`${__dirname}/device_auths.json`);
 const CheckUpdate = require("check-update-github");
-if (!existsSync(`${__dirname}/data/config.json`)) {
-    writeFileSync(`${__dirname}/data/config.json`, readFileSync(`${__dirname}/data/config.example.json`));
-}
-const Config = require(`${__dirname}/data/config.json`);
-const Fork = require("child_process");
-if (!existsSync(`${__dirname}/data/history.json`)) {
-    try {
-        writeFileSync(`${__dirname}/data/history.json`, "{}");
-    } catch (err) {
-        Logger.error(`Failed to generate data/history.json file (${err})`);
-        process.exit(1);
-    }
-}
-const History = require(`${__dirname}/data/history.json`);
+const Config = require(`${__dirname}/config.json`);
+const History = require(`${__dirname}/history.json`);
+const Logger = require("tracer").console(`${__dirname}/logger.js`);
 const Package = require("./package.json");
 
 function isUpToDate() {
@@ -40,35 +28,6 @@ function isUpToDate() {
     });
 }
 
-function notify(appriseUrl, newlyClaimedPromos) {
-    if (!appriseUrl || newlyClaimedPromos.length === 0) {
-        return;
-    }
-
-    let notification = newlyClaimedPromos.map((promo) => promo.title).join(", ");
-    try {
-        let s = Fork.spawnSync("apprise", [
-            "-vv",
-            "-t",
-            "New freebies claimed on Epic Games Store",
-            "-b",
-            notification,
-            appriseUrl,
-        ]);
-
-        let output = s.stdout ? s.stdout.toString() : "ERROR: maybe apprise not found";
-        if (output && output.includes("ERROR")) {
-            Logger.error(`Failed to send push notification (${output})`);
-        } else if (output) {
-            Logger.info("Push notification sent");
-        } else {
-            Logger.warn("No output from apprise");
-        }
-    } catch (err) {
-        Logger.error(`Failed to send push notification (${err})`);
-    }
-}
-
 function write(path, data) {
     // eslint-disable-next-line no-extra-parens
     return new Promise((res, rej) => writeFile(path, data, (err) => (err ? rej(err) : res(true))));
@@ -79,8 +38,7 @@ function sleep(delay) {
 }
 
 (async() => {
-    let { options, delay, loop, appriseUrl } = Config;
-
+    let { options, delay, loop } = Config;
     do {
         if (!await isUpToDate()) {
             Logger.warn(`There is a new version available: ${Package.url}`);
@@ -89,10 +47,8 @@ function sleep(delay) {
         for (let email in Auths) {
             let { country } = Auths[email];
             let claimedPromos = History[email] || [];
-            let newlyClaimedPromos = [];
             let useDeviceAuth = true;
-            let rememberDevicesPath = `${__dirname}/data/device_auths.json`;
-            let clientOptions = { email, ...options, rememberDevicesPath };
+            let clientOptions = { email, ...options };
             let client = new EpicGames(clientOptions);
             if (!await client.init()) {
                 Logger.error("Error while initialize process.");
@@ -125,7 +81,6 @@ function sleep(delay) {
                     let purchased = await client.purchase(offer, 1);
                     if (purchased) {
                         Logger.info(`Successfully claimed ${offer.title} (${purchased})`);
-                        newlyClaimedPromos.push(offer);
                     } else {
                         Logger.warn(`${offer.title} was already claimed for this account`);
                     }
@@ -145,13 +100,11 @@ function sleep(delay) {
             }
 
             History[email] = claimedPromos;
-            notify(appriseUrl, newlyClaimedPromos);
-
             await client.logout();
             Logger.info(`Logged ${client.account.name} out of Epic Games`);
         }
 
-        await write(`${__dirname}/data/history.json`, JSON.stringify(History, null, 4));
+        await write(`${__dirname}/history.json`, JSON.stringify(History, null, 4));
         if (loop) {
             Logger.info(`Waiting ${delay} minutes`);
             await sleep(delay);
