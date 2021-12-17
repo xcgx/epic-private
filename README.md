@@ -1,5 +1,5 @@
 # Actions
-用于自动化处理白嫖EPIC免费游戏1
+用于自动化处理白嫖EPIC免费游戏
 
 ## 使用过程
 1. 下载[DeviceAuthGenerator](https://github.com/xMistt/DeviceAuthGenerator/releases/)
